@@ -5,8 +5,6 @@ import { getProgress, redeemToken } from '../lib/progress'
 import { generateSentence } from '../lib/generateSentence'
 import type { WordPair, GameProgress } from '../lib/supabase'
 
-const hasApiKey = !!import.meta.env.VITE_ANTHROPIC_API_KEY
-
 const GUIDE_SECTIONS = [
   {
     emoji: '📝',
@@ -347,8 +345,7 @@ export default function Dashboard() {
               <label style={{ fontSize: '0.62rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 Context sentence <span style={{ color: '#d1d5db', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(uses the correct word)</span>
               </label>
-              {hasApiKey && (
-                <button type="button" onClick={handleGenerate}
+              <button type="button" onClick={handleGenerate}
                   disabled={!correctInput.trim() || generating}
                   style={{
                     background: (!correctInput.trim() || generating) ? '#f3f4f6' : 'linear-gradient(135deg, #11998e, #38ef7d)',
@@ -359,7 +356,6 @@ export default function Dashboard() {
                   }}>
                   {generating ? '✨ Generating…' : '✨ Auto-generate'}
                 </button>
-              )}
             </div>
             <input
               value={sentenceInput}

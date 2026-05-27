@@ -12,9 +12,10 @@ export async function getWordPairs(): Promise<WordPair[]> {
 }
 
 export async function addWordPair(incorrect: string, correct: string, sentence?: string): Promise<WordPair> {
+  const { data: { user } } = await supabase.auth.getUser()
   const { data, error } = await supabase
     .from('spelling_word_pairs')
-    .insert({ incorrect: incorrect.trim().toLowerCase(), correct: correct.trim().toLowerCase(), active: true, sentence: sentence?.trim() || null })
+    .insert({ incorrect: incorrect.trim().toLowerCase(), correct: correct.trim().toLowerCase(), active: true, sentence: sentence?.trim() || null, user_id: user!.id })
     .select()
     .single()
 

@@ -148,7 +148,7 @@ export default function Dashboard() {
           Parent Dashboard
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '0.9rem' }}>
-          Manage spelling words and track progress.
+          Manage your spelling words and track progress.
         </p>
       </div>
 

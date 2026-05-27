@@ -1,25 +1,36 @@
 import { supabase } from './supabase'
 import type { GameProgress } from './supabase'
 
-const PROGRESS_ID = 'singleton'
+async function getUserId(): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  return user.id
+}
 
 export async function getProgress(): Promise<GameProgress> {
+  const userId = await getUserId()
+
   const { data, error } = await supabase
     .from('spelling_progress')
     .select('*')
-    .eq('id', PROGRESS_ID)
+    .eq('user_id', userId)
     .single()
 
   if (error || !data) {
-    const fresh: GameProgress = {
-      id: PROGRESS_ID,
+    const fresh = {
       total_points: 0,
       tokens_earned: 0,
       tokens_redeemed: 0,
+      user_id: userId,
       updated_at: new Date().toISOString(),
     }
-    await supabase.from('spelling_progress').upsert(fresh)
-    return fresh
+    const { data: created, error: createError } = await supabase
+      .from('spelling_progress')
+      .insert(fresh)
+      .select()
+      .single()
+    if (createError) throw createError
+    return created as GameProgress
   }
   return data as GameProgress
 }
@@ -36,7 +47,12 @@ export async function addPoints(delta: number): Promise<GameProgress> {
     updated_at: new Date().toISOString(),
   }
 
-  await supabase.from('spelling_progress').upsert(updated)
+  const { error } = await supabase
+    .from('spelling_progress')
+    .update({ total_points: newPoints, tokens_earned: newTokensEarned, updated_at: updated.updated_at })
+    .eq('id', current.id)
+
+  if (error) throw error
   return updated
 }
 
@@ -51,6 +67,11 @@ export async function redeemToken(): Promise<GameProgress> {
     updated_at: new Date().toISOString(),
   }
 
-  await supabase.from('spelling_progress').upsert(updated)
+  const { error } = await supabase
+    .from('spelling_progress')
+    .update({ tokens_redeemed: updated.tokens_redeemed, updated_at: updated.updated_at })
+    .eq('id', current.id)
+
+  if (error) throw error
   return updated
 }

@@ -28,19 +28,27 @@ export async function addWordPair(incorrect: string, correct: string, sentence?:
 }
 
 export async function toggleWordPair(id: string, active: boolean): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
   const { error } = await supabase
     .from('spelling_word_pairs')
     .update({ active })
     .eq('id', id)
+    .eq('user_id', user.id)
 
   if (error) throw error
 }
 
 export async function deleteWordPair(id: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
   const { error } = await supabase
     .from('spelling_word_pairs')
     .delete()
     .eq('id', id)
+    .eq('user_id', user.id)
 
   if (error) throw error
 }

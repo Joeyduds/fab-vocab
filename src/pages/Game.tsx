@@ -7,7 +7,12 @@ import type { WordPair, GameProgress } from '../lib/supabase'
 type Feedback = 'correct' | 'wrong-first' | 'wrong-final' | null
 
 function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5)
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
 }
 
 function SentenceDisplay({ sentence, correct, incorrect }: { sentence: string; correct: string; incorrect: string }) {
@@ -70,10 +75,12 @@ export default function Game() {
     const isCorrect = answer === current.correct
 
     if (isCorrect) {
-      const prev = progress?.tokens_earned ?? 0
-      const updated = await addPoints(1)
-      setProgress(updated)
-      if (updated.tokens_earned > prev) setNewTokenAlert(true)
+      try {
+        const prev = progress?.tokens_earned ?? 0
+        const updated = await addPoints(1)
+        setProgress(updated)
+        if (updated.tokens_earned > prev) setNewTokenAlert(true)
+      } catch { /* non-fatal — points just don't save */ }
       setFeedback('correct')
       setTimeout(() => advanceWord(), 1100)
     } else if (attempt === 1) {
@@ -81,8 +88,10 @@ export default function Game() {
       setInput('')
       setAttempt(2)
     } else {
-      const updated = await addPoints(-1)
-      setProgress(updated)
+      try {
+        const updated = await addPoints(-1)
+        setProgress(updated)
+      } catch { /* non-fatal */ }
       setFeedback('wrong-final')
       setTimeout(() => advanceWord(), 1600)
     }

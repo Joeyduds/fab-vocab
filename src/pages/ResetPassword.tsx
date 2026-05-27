@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 
@@ -10,14 +10,32 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [ready, setReady] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    // Supabase puts the recovery session tokens in the URL hash.
-    // Calling getSession() exchanges them and establishes the session.
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true)
-      else setError('This reset link has expired or is invalid. Please request a new one.')
+    // Recovery tokens arrive in the URL hash (#access_token=...&type=recovery).
+    // The Supabase v2 client exchanges them asynchronously and fires the
+    // PASSWORD_RECOVERY event — NOT a synchronous getSession() result.
+    // We must listen for this event; calling getSession() immediately races
+    // the exchange and almost always returns null, showing a false "link expired".
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setReady(true)
+      }
     })
+
+    // Fallback: if no event fires in 5s the link is genuinely expired/invalid
+    const timeout = setTimeout(() => {
+      setReady(prev => {
+        if (!prev) setError('This reset link has expired or is invalid. Please request a new one.')
+        return prev
+      })
+    }, 5000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -29,6 +47,7 @@ export default function ResetPassword() {
     try {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
+      setSuccess(true)
       setTimeout(() => navigate('/game', { replace: true }), 1500)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to update password.')
@@ -68,13 +87,13 @@ export default function ResetPassword() {
               Link expired
             </h1>
             <p style={{ color: '#6b7280', fontSize: '0.9rem', lineHeight: 1.6, margin: '0 0 1.5rem' }}>{error}</p>
-            <a href="/forgot-password" style={{
+            <Link to="/forgot-password" style={{
               display: 'inline-block', background: 'linear-gradient(135deg, #11998e, #38ef7d)',
               color: '#fff', fontWeight: 800, fontSize: '0.95rem',
               padding: '0.7rem 2rem', borderRadius: '999px', textDecoration: 'none',
             }}>
               Request new link
-            </a>
+            </Link>
           </>
         ) : (
           <>
@@ -126,7 +145,7 @@ export default function ResetPassword() {
                 </motion.p>
               )}
 
-              {loading === false && password && confirm && !error && (
+              {success && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   style={{ color: '#059669', fontSize: '0.85rem', margin: 0, fontWeight: 600, textAlign: 'center' }}>
                   ✅ Password updated! Taking you to the game…

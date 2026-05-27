@@ -32,7 +32,7 @@ function Nav() {
   if (!isApp) return null
 
   async function handleSignOut() {
-    await signOut()
+    try { await signOut() } catch { /* ignore */ }
     navigate('/', { replace: true })
   }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 
@@ -42,13 +42,13 @@ export default function AuthCallback() {
               Link expired
             </h1>
             <p style={{ color: '#6b7280', fontSize: '0.9rem', lineHeight: 1.6, margin: '0 0 1.5rem' }}>{error}</p>
-            <a href="/signup" style={{
+            <Link to="/signup" style={{
               display: 'inline-block', background: 'linear-gradient(135deg, #11998e, #38ef7d)',
               color: '#fff', fontWeight: 800, fontSize: '0.95rem',
               padding: '0.7rem 2rem', borderRadius: '999px', textDecoration: 'none',
             }}>
               Try again
-            </a>
+            </Link>
           </>
         ) : (
           <>

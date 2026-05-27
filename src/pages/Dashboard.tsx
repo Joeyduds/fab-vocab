@@ -64,13 +64,20 @@ export default function Dashboard() {
   const [redeemConfirm, setRedeemConfirm] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
 
+  const [loadError, setLoadError] = useState('')
+
   useEffect(() => { load() }, [])
 
   async function load() {
-    const [wps, prog] = await Promise.all([getWordPairs(), getProgress()])
-    setPairs(wps)
-    setProgress(prog)
-    setLoading(false)
+    try {
+      const [wps, prog] = await Promise.all([getWordPairs(), getProgress()])
+      setPairs(wps)
+      setProgress(prog)
+    } catch (err: unknown) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to load dashboard.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleAdd(e: React.FormEvent) {
@@ -109,20 +116,32 @@ export default function Dashboard() {
   }
 
   async function handleToggle(pair: WordPair) {
-    await toggleWordPair(pair.id, !pair.active)
-    setPairs(prev => prev.map(p => p.id === pair.id ? { ...p, active: !p.active } : p))
+    try {
+      await toggleWordPair(pair.id, !pair.active)
+      setPairs(prev => prev.map(p => p.id === pair.id ? { ...p, active: !p.active } : p))
+    } catch {
+      setAddError('Could not update word — please try again.')
+    }
   }
 
   async function handleDelete(id: string) {
-    await deleteWordPair(id)
-    setPairs(prev => prev.filter(p => p.id !== id))
+    try {
+      await deleteWordPair(id)
+      setPairs(prev => prev.filter(p => p.id !== id))
+    } catch {
+      setAddError('Could not delete word — please try again.')
+    }
   }
 
   async function handleRedeem() {
     if (!progress) return
-    const updated = await redeemToken()
-    setProgress(updated)
-    setRedeemConfirm(false)
+    try {
+      const updated = await redeemToken()
+      setProgress(updated)
+      setRedeemConfirm(false)
+    } catch {
+      setAddError('Could not redeem token — please try again.')
+    }
   }
 
   if (loading) {
@@ -132,6 +151,18 @@ export default function Dashboard() {
           style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 700, textShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
           Loading...
         </motion.p>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', gap: '1rem', padding: '2rem', textAlign: 'center' }}>
+        <div style={{ fontSize: '3rem' }}>⚠️</div>
+        <p style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 700, maxWidth: '400px', textShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>{loadError}</p>
+        <button onClick={() => { setLoadError(''); setLoading(true); load() }} style={{ background: '#fff', color: '#0f9b58', fontWeight: 800, border: 'none', borderRadius: '999px', padding: '0.7rem 2rem', fontSize: '1rem', cursor: 'pointer' }}>
+          Try again
+        </button>
       </div>
     )
   }

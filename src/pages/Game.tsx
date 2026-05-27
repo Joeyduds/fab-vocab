@@ -38,18 +38,24 @@ export default function Game() {
   const [progress, setProgress] = useState<GameProgress | null>(null)
   const [loading, setLoading] = useState(true)
   const [newTokenAlert, setNewTokenAlert] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    Promise.all([getWordPairs(), getProgress()]).then(([wps, prog]) => {
-      const active = wps.filter(p => p.active)
-      setPairs(active)
-      setProgress(prog)
-      const q = shuffle(active)
-      setQueue(q.slice(1))
-      setCurrent(q[0] ?? null)
-      setLoading(false)
-    })
+    Promise.all([getWordPairs(), getProgress()])
+      .then(([wps, prog]) => {
+        const active = wps.filter(p => p.active)
+        setPairs(active)
+        setProgress(prog)
+        const q = shuffle(active)
+        setQueue(q.slice(1))
+        setCurrent(q[0] ?? null)
+        setLoading(false)
+      })
+      .catch(err => {
+        setLoadError(err?.message ?? 'Failed to load game data.')
+        setLoading(false)
+      })
   }, [])
 
   useEffect(() => {
@@ -106,6 +112,20 @@ export default function Game() {
           style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 700, textShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
           Loading...
         </motion.p>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', gap: '1rem', padding: '2rem', textAlign: 'center' }}>
+        <div style={{ fontSize: '3rem' }}>⚠️</div>
+        <p style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 700, maxWidth: '400px', textShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
+          {loadError}
+        </p>
+        <button onClick={() => window.location.reload()} style={{ background: '#fff', color: '#0f9b58', fontWeight: 800, border: 'none', borderRadius: '999px', padding: '0.7rem 2rem', fontSize: '1rem', cursor: 'pointer' }}>
+          Try again
+        </button>
       </div>
     )
   }

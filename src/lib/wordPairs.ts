@@ -2,9 +2,13 @@ import { supabase } from './supabase'
 import type { WordPair } from './supabase'
 
 export async function getWordPairs(): Promise<WordPair[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
   const { data, error } = await supabase
     .from('spelling_word_pairs')
     .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   if (error) throw error

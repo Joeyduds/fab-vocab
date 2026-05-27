@@ -12,6 +12,7 @@ export type WordPair = {
   active: boolean
   sentence: string | null
   created_at: string
+  user_id: string
 }
 
 export type GameProgress = {
@@ -20,4 +21,5 @@ export type GameProgress = {
   tokens_earned: number
   tokens_redeemed: number
   updated_at: string
+  user_id: string
 }

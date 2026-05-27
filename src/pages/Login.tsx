@@ -67,9 +67,14 @@ export default function Login() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Password
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Password
+              </label>
+              <Link to="/forgot-password" style={{ fontSize: '0.78rem', color: '#0f9b58', fontWeight: 600, textDecoration: 'none' }}>
+                Forgot password?
+              </Link>
+            </div>
             <input
               type="password" value={password} onChange={e => setPassword(e.target.value)}
               placeholder="••••••••" required autoComplete="current-password"

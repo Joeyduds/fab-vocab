@@ -7,6 +7,50 @@ import type { WordPair, GameProgress } from '../lib/supabase'
 
 const hasApiKey = !!import.meta.env.VITE_ANTHROPIC_API_KEY
 
+const GUIDE_SECTIONS = [
+  {
+    emoji: '📝',
+    title: 'Adding words',
+    tips: [
+      'Pull words directly from your child\'s recent spelling tests or homework — focus on words they missed.',
+      'Enter their actual misspelling (e.g. "frend") in the left field and the correct spelling (e.g. "friend") on the right.',
+      'Aim to keep 5–10 active words at a time. Too many at once can feel overwhelming.',
+    ],
+  },
+  {
+    emoji: '💬',
+    title: 'Writing context sentences',
+    tips: [
+      'Use short, simple sentences a 1st–2nd grader would understand — keep it to one clause.',
+      'Write the sentence using the correct spelling; the game automatically swaps in the misspelling so your child can spot it.',
+      'Good example: "She went to the store with her friend." Bad example: "Her friend, who she had known since kindergarten, went with her."',
+      'Sentences with familiar settings (school, home, playground) stick better than abstract ones.',
+    ],
+  },
+  {
+    emoji: '🔄',
+    title: 'Managing the word list',
+    tips: [
+      'Toggle a word to "Off" if your child is temporarily struggling — let them build confidence on easier words first, then re-enable it.',
+      'Delete a word once your child spells it correctly 3–4 sessions in a row — that\'s a reliable sign it\'s mastered.',
+      'Refresh the list weekly to match what\'s being covered in school.',
+    ],
+  },
+  {
+    emoji: '🎟️',
+    title: 'Token rewards & prizes',
+    tips: [
+      'Every 35 points earns 1 token. Each correct first-try answer = 1 point, so a good session of ~10 words earns about a token.',
+      'Before starting, agree on what each token is worth — a small, consistent prize works better than a big unpredictable one.',
+      'Prize ideas by token level:',
+      '• 1 token → screen time bonus (15 min), a small treat, or pick the dinner',
+      '• 3 tokens → a trip to the park, choose a family movie, or a new book',
+      '• 5 tokens → a toy or game under $10, special outing, or a sleep-over',
+      'Write the prize chart somewhere visible so your child knows exactly what they\'re working toward.',
+    ],
+  },
+]
+
 export default function Dashboard() {
   const [pairs, setPairs] = useState<WordPair[]>([])
   const [progress, setProgress] = useState<GameProgress | null>(null)
@@ -18,6 +62,7 @@ export default function Dashboard() {
   const [addError, setAddError] = useState('')
   const [saving, setSaving] = useState(false)
   const [redeemConfirm, setRedeemConfirm] = useState(false)
+  const [guideOpen, setGuideOpen] = useState(false)
 
   useEffect(() => { load() }, [])
 
@@ -98,13 +143,67 @@ export default function Dashboard() {
     <div style={{ maxWidth: '680px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
 
       {/* Header */}
-      <div style={{ marginBottom: '1.75rem' }}>
+      <div style={{ marginBottom: '1.25rem' }}>
         <h1 style={{ fontSize: '1.9rem', fontWeight: 900, color: '#fff', margin: '0 0 0.25rem', textShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
           Parent Dashboard
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '0.9rem' }}>
           Manage spelling words and track progress.
         </p>
+      </div>
+
+      {/* How It Works Guide */}
+      <div style={{
+        background: 'rgba(255,255,255,0.15)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255,255,255,0.3)',
+        borderRadius: '20px',
+        marginBottom: '1.25rem',
+        overflow: 'hidden',
+      }}>
+        <button
+          onClick={() => setGuideOpen(o => !o)}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '0.9rem 1.25rem', background: 'none', border: 'none', cursor: 'pointer',
+          }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff', fontWeight: 800, fontSize: '0.95rem' }}>
+            <span>📖</span> How to use Fab Vocab
+          </span>
+          <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', fontWeight: 600, transition: 'transform 0.2s', display: 'inline-block', transform: guideOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {guideOpen && (
+            <motion.div
+              key="guide"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              style={{ overflow: 'hidden' }}
+            >
+              <div style={{ padding: '0 1.25rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+                {GUIDE_SECTIONS.map(section => (
+                  <div key={section.title}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.45rem' }}>
+                      <span style={{ fontSize: '1rem' }}>{section.emoji}</span>
+                      <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.88rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{section.title}</span>
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      {section.tips.map((tip, i) => (
+                        <li key={i} style={{ color: 'rgba(255,255,255,0.88)', fontSize: '0.83rem', lineHeight: 1.55 }}>
+                          {tip}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Stats */}
